@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.cell.PropertyValueFactory?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="359.0" prefWidth="538.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.culpan.mastertools.controllers.CloseSessionDialogController">
+   <children>
+      <TableView fx:id="tableSession" layoutX="14.0" layoutY="14.0" prefHeight="200.0" prefWidth="508.0">
+        <columns>
+          <TableColumn prefWidth="356.0" text="Encounter">
+              <cellValueFactory><PropertyValueFactory property="description" /></cellValueFactory>
+          </TableColumn>
+
+            <TableColumn minWidth="0.0" prefWidth="74.0" text="XP">
+                <cellValueFactory><PropertyValueFactory property="xp" /></cellValueFactory>
+            </TableColumn>
+        </columns>
+      </TableView>
+      <Label layoutX="14.0" layoutY="231.0" text="Total XP" />
+      <TextField fx:id="textTotalXp" layoutX="68.0" layoutY="226.0" />
+      <Label layoutX="265.0" layoutY="231.0" text="Number players" />
+      <Spinner fx:id="spinnerNumPlayers" layoutX="361.0" layoutY="226.0" />
+      <Label layoutX="147.0" layoutY="278.0" text="XP per Player" />
+      <TextField fx:id="textXpPerPlayer" layoutX="230.0" layoutY="273.0" />
+      <Button fx:id="closeSessionButton" defaultButton="true" layoutX="170.0" layoutY="318.0" mnemonicParsing="false" onAction="#closeSession" text="Close Session" />
+      <Button fx:id="cancelButton" cancelButton="true" layoutX="274.0" layoutY="318.0" mnemonicParsing="false" onAction="#cancel" prefWidth="95.0" text="Cancel" />
+      <Button fx:id="closeButton" layoutX="467.0" layoutY="318.0" mnemonicParsing="false" onAction="#cancel" text="Close" />
+   </children>
+</AnchorPane>

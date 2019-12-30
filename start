@@ -1,0 +1,4 @@
+#!/bin/sh
+./bin/java --add-modules java.sql,javafx.base,javafx.controls,javafx.fxml \
+  -cp MasterTools-1.0-SNAPSHOT.jar:sqlite-jdbc-3.28.0.jar \
+  org.culpan.mastertools.MainApp &
