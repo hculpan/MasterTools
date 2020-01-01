@@ -3,15 +3,27 @@ package org.culpan.mastertools.controllers;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Group;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.VBox;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import org.culpan.mastertools.dao.EncounterDao;
 import org.culpan.mastertools.model.Monster;
 
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.URL;
+import java.net.URLConnection;
 import java.text.NumberFormat;
 import java.util.Locale;
 import java.util.ResourceBundle;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class CreateMonsterDialogController implements Initializable {
     private final static EncounterDao encounterDao = new EncounterDao();
@@ -137,7 +149,7 @@ public class CreateMonsterDialogController implements Initializable {
         m.setHealth(m.getBaseHp());
         m.setAc(Integer.parseInt(textAc.getText()));
         m.setAttk(Integer.parseInt(textAttk.getText()));
-        m.setDmg(Integer.parseInt(textDmg.getText()));
+        m.setDmg(textDmg.getText());
         m.setDc(Integer.parseInt(textDc.getText()));
         m.setCr(comboCr.getValue());
         int totalXp = Integer.parseInt(textXp.getText().replace(",",""));

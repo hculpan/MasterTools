@@ -11,7 +11,7 @@
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="305.0" prefWidth="369.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.culpan.mastertools.controllers.CreateMonsterDialogController">
    <children>
       <Label layoutX="14.0" layoutY="19.0" text="Monster name" />
-      <TextField fx:id="textName" layoutX="100.0" layoutY="14.0" prefHeight="27.0" prefWidth="250.0" />
+      <TextField fx:id="textName" layoutX="100.0" layoutY="14.0" prefHeight="27.0" prefWidth="249.0" />
       <ComboBox fx:id="comboCr" layoutX="25.0" layoutY="71.0" onAction="#crChanged" prefWidth="150.0" />
       <Label layoutX="23.0" layoutY="54.0" text="CR" />
       <Label layoutX="196.0" layoutY="54.0" text="XP" />

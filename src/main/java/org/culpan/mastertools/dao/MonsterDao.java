@@ -1,6 +1,7 @@
 package org.culpan.mastertools.dao;
 
 import org.culpan.mastertools.model.Monster;
+import org.culpan.mastertools.model.MonsterCondition;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -20,7 +21,8 @@ public class MonsterDao extends BaseDao<Monster> {
 
     public List<Monster> loadForEncounter(int encounterId) {
         return executeListQuery("select * from monsters " +
-                        "where encounter_id = " + encounterId,
+                        " where encounter_id = " + encounterId +
+                        " order by number ",
                 rs -> {
                     List<Monster> monsters = new ArrayList<>();
                     while (rs.next()) {
@@ -28,6 +30,46 @@ public class MonsterDao extends BaseDao<Monster> {
                     }
                     return monsters;
                 });
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<MonsterCondition> loadConditions(int monsterId) {
+        return (List<MonsterCondition>) executeQuery("select * from monster_conditions where monster_id = " + monsterId,
+                rs -> {
+                    List<MonsterCondition> conditions = new ArrayList<>();
+
+                    while (rs.next()) {
+                        MonsterCondition mc = new MonsterCondition();
+                        mc.setId(rs.getInt("id"));
+                        mc.setMonsterId(rs.getInt("monster_id"));
+                        mc.setCondition(rs.getString("condition"));
+                        conditions.add(mc);
+                    }
+
+                    return conditions;
+                });
+    }
+
+    public void deleteConditions(Monster monster, boolean autocommit) {
+        executeUpdate("delete from monster_conditions where monster_id = " + monster.getId(), autocommit);
+        monster.getConditions().clear();
+    }
+
+    private void clearConditionsInDb(int monsterId, boolean autocommit) {
+        executeUpdate("delete from monster_conditions where monster_id = " + monsterId, autocommit);
+    }
+
+    public void addOrUpdateConditions(Monster monster) {
+        clearConditionsInDb(monster.getId(), false);
+
+        for (MonsterCondition mc : monster.getConditions()) {
+            mc.setMonsterId(monster.getId());
+            executeUpdate("insert into monster_conditions (monster_id, condition) " +
+                    "values (" + monster.getId() + ",'" + mc.getCondition() + "')", false);
+            mc.setId(getLastInsertId());
+        }
+
+        commit();
     }
 
     @Override
@@ -41,7 +83,7 @@ public class MonsterDao extends BaseDao<Monster> {
                     ",   health = " + item.getHealth() +
                     ",   ac = " + item.getAc() +
                     ",   attk = " + item.getAttk() +
-                    ",   dmg = " + item.getDmg() +
+                    ",   dmg = '" + item.getDmg() + "' " +
                     ",   dc = " + item.getDc() +
                     ",   cr = '" + item.getCr() + "' " +
                     ",   xp = " + item.getXp() +
@@ -53,12 +95,13 @@ public class MonsterDao extends BaseDao<Monster> {
                     "(encounter_id, number, name, base_hp, health, ac, attk, dmg, dc, cr, xp, active, summoned) " +
                     "values (" + item.getEncounterId() + "," + item.getNumber() + ",'" + item.getName() +
                     "'," + item.getBaseHp() + "," + item.getHealth() + "," + item.getAc() +
-                    "," + item.getAttk() + "," + item.getDmg() + "," + item.getDc() +
+                    "," + item.getAttk() + ",'" + item.getDmg() + "'," + item.getDc() +
                     ",'" + item.getCr() + "'," + item.getXp() + "," + (item.isActive() ? 1 : 0) +
                     "," + (item.isSummoned() ? 1 : 0) + ")", autocommit)) {
                 item.setId(getLastInsertId());
             }
         }
+        addOrUpdateConditions(item);
     }
 
     @Override
@@ -91,12 +134,16 @@ public class MonsterDao extends BaseDao<Monster> {
         monster.setHealth(rs.getInt("health"));
         monster.setAc(rs.getInt("ac"));
         monster.setAttk(rs.getInt("attk"));
-        monster.setDmg(rs.getInt("dmg"));
+        monster.setDmg(rs.getString("dmg"));
         monster.setDc(rs.getInt("dc"));
         monster.setCr(rs.getString("cr"));
         monster.setXp(rs.getInt("xp"));
         monster.setActive(rs.getInt("active") > 0);
         monster.setSummoned(rs.getInt("summoned") > 0);
+
+        monster.getConditions().clear();
+        monster.getConditions().addAll(loadConditions(monster.getId()));
+
         return monster;
     }
 }

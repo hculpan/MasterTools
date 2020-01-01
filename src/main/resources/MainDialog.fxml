@@ -5,6 +5,7 @@
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.SeparatorMenuItem?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.cell.PropertyValueFactory?>
@@ -63,6 +64,20 @@
               <items>
                 <MenuItem mnemonicParsing="false" onAction="#newSession" text="New Session" />
                   <MenuItem mnemonicParsing="false" onAction="#xpForSession" text="XP for Session" />
+              </items>
+            </Menu>
+            <Menu fx:id="menuCombatant" mnemonicParsing="false" text="Combatant">
+              <items>
+                  <MenuItem mnemonicParsing="false" onAction="#damage" text="Damage" />
+                <MenuItem mnemonicParsing="false" onAction="#damageWithSaves" text="Damage with Save" />
+                  <SeparatorMenuItem mnemonicParsing="false" />
+                  <MenuItem mnemonicParsing="false" onAction="#heal" text="Heal" />
+                  <MenuItem mnemonicParsing="false" onAction="#healToFull" text="Heal to Full" />
+                  <SeparatorMenuItem mnemonicParsing="false" />
+                  <MenuItem mnemonicParsing="false" onAction="#addMore" text="Add More" />
+                  <SeparatorMenuItem mnemonicParsing="false" />
+                  <MenuItem mnemonicParsing="false" onAction="#editConditions" text="Edit Conditions" />
+                <MenuItem mnemonicParsing="false" onAction="#removeAllConditions" text="Remove All Conditions" />
               </items>
             </Menu>
         </menus>

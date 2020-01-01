@@ -1,5 +1,9 @@
 package org.culpan.mastertools.model;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class Monster {
     private int id;
     private int encounterId;
@@ -9,12 +13,13 @@ public class Monster {
     private int health;
     private int ac;
     private int attk;
-    private int dmg;
+    private String dmg;
     private int dc;
     private String cr;
     private int xp;
     private boolean active = true;
     private boolean summoned = false;
+    private final List<MonsterCondition> conditions = new ArrayList<>();
 
     public int getId() {
         return id;
@@ -22,6 +27,9 @@ public class Monster {
 
     public void setId(int id) {
         this.id = id;
+        for (MonsterCondition condition : conditions) {
+            condition.setMonsterId(id);
+        }
     }
 
     public int getEncounterId() {
@@ -80,11 +88,11 @@ public class Monster {
         this.attk = attk;
     }
 
-    public int getDmg() {
+    public String getDmg() {
         return dmg;
     }
 
-    public void setDmg(int dmg) {
+    public void setDmg(String dmg) {
         this.dmg = dmg;
     }
 
@@ -132,6 +140,14 @@ public class Monster {
         return String.format("%s %d", getName(), getNumber());
     }
 
+    public List<MonsterCondition> getConditions() {
+        return conditions;
+    }
+
+    public String getConditionAbrText() {
+        return getConditions().stream().map(MonsterCondition::getConditionAbr).collect(Collectors.joining(", "));
+    }
+
     @Override
     public Object clone() {
         Monster m = new Monster();
@@ -148,6 +164,10 @@ public class Monster {
         m.setXp(xp);
         m.setActive(active);
         m.setSummoned(summoned);
+        m.conditions.clear();
+        for (MonsterCondition mc : conditions) {
+            m.conditions.add((MonsterCondition)mc.clone());
+        }
         return m;
     }
 }

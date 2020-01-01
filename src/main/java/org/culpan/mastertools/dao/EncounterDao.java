@@ -67,7 +67,8 @@ public class EncounterDao extends BaseDao<Encounter> {
     }
 
     public void addMonstersToCurrentEncounter(Monster monster, int count) {
-        int monsterNum = getMaxNumberInEncounter(CURRENT_ENCOUNTER_ID);
+        int monsterNum = getMaxNumberInEncounter(CURRENT_ENCOUNTER_ID, monster.isSummoned());
+        if (monsterNum == 0 && monster.isSummoned()) monsterNum = 99;
         for (int i = 0; i < count; i++) {
             Monster m = (Monster)monster.clone();
             m.setEncounterId(CURRENT_ENCOUNTER_ID);
@@ -78,8 +79,10 @@ public class EncounterDao extends BaseDao<Encounter> {
         commit();
     }
 
-    public int getMaxNumberInEncounter(int encounterId) {
-        Object o = executeQuery("select max(number) as max from monsters where encounter_id = " + encounterId,
+    public int getMaxNumberInEncounter(int encounterId, boolean summoned) {
+        Object o = executeQuery("select max(number) as max from monsters " +
+                        "where encounter_id = " + encounterId +
+                        "  and summoned = " + (summoned ? 1 : 0),
                 rs -> {
                     Integer result = 0;
 

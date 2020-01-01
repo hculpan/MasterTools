@@ -73,6 +73,79 @@ public class MainDialogController implements Initializable {
     @FXML
     Label labelSession;
 
+    @FXML
+    Menu menuCombatant;
+
+    public Encounter getEncounter() {
+        return encounter;
+    }
+
+    public void setEncounter(Encounter encounter) {
+        this.encounter = encounter;
+    }
+
+    public Party getParty() {
+        return party;
+    }
+
+    public void setParty(Party party) {
+        this.party = party;
+    }
+
+    public TableView<Monster> getTableMonsters() {
+        return tableMonsters;
+    }
+
+    public void setTableMonsters(TableView<Monster> tableMonsters) {
+        this.tableMonsters = tableMonsters;
+    }
+
+    public Menu getMenuCombatant() {
+        return menuCombatant;
+    }
+
+    public void setMenuCombatant(Menu menuCombatant) {
+        this.menuCombatant = menuCombatant;
+    }
+
+    public void editConditions() {
+        if (tableMonsters.getSelectionModel().getSelectedItems().size() == 0) return;
+
+        Set<String> conditions = new HashSet<>();
+        for (Monster m : tableMonsters.getSelectionModel().getSelectedItems()) {
+            for (MonsterCondition monsterCondition : m.getConditions()) {
+                conditions.add(monsterCondition.getCondition());
+            }
+        }
+
+        FXMLLoader loader = new FXMLLoader();
+        loader.setLocation(getClass().getResource("/ConditionsEditDialog.fxml"));
+        try {
+            Stage primaryStage = new Stage();
+            Parent root = loader.load();
+            ConditionsEditDialogController controller = loader.getController();
+            controller.initialize(conditions, tableMonsters.getSelectionModel().getSelectedItems());
+
+            primaryStage.initModality(Modality.APPLICATION_MODAL);
+            primaryStage.setScene(new Scene(root));
+            primaryStage.showAndWait();
+            encounter = encounterDao.getCurrentEncounter();
+            refreshScreen();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void removeAllConditions() {
+        if (tableMonsters.getSelectionModel().getSelectedItems().size() == 0) return;
+
+        for (Monster m : tableMonsters.getSelectionModel().getSelectedItems()) {
+            monsterDao.deleteConditions(m, false);
+        }
+        monsterDao.commit();
+        refreshScreen();
+    }
+
     public void clearEncounter() {
         if (tableMonsters.getItems().size() == 0 || !okToClear()) return;
 
@@ -162,7 +235,7 @@ public class MainDialogController implements Initializable {
         refreshScreen();
     }
 
-    private void damageMonsters(List<Monster> monsters) {
+    protected void damageMonsters(List<Monster> monsters) {
         if (monsters == null || monsters.size() == 0) return;
 
         TextInputDialog dialog = new TextInputDialog("0");
@@ -179,7 +252,12 @@ public class MainDialogController implements Initializable {
                     if (data.getHealth() < 0) {
                         data.setHealth(0);
                     }
-                    monsterDao.addOrUpdate(data);
+                    if (data.isSummoned() && data.getHealth() == 0) {
+                        monsterDao.delete(data);
+                        encounter = encounterDao.getCurrentEncounter();
+                    } else {
+                        monsterDao.addOrUpdate(data);
+                    }
                 }
             } catch (Exception e) {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -189,11 +267,11 @@ public class MainDialogController implements Initializable {
 
                 alert.showAndWait();
             }
-            tableMonsters.refresh();
+            refreshScreen();
         }
     }
 
-    private void healMonsters(List<Monster> monsters) {
+    protected void healMonsters(List<Monster> monsters) {
         if (monsters == null || monsters.size() == 0) return;
 
         TextInputDialog dialog = new TextInputDialog("0");
@@ -224,6 +302,35 @@ public class MainDialogController implements Initializable {
         }
     }
 
+    public void damage() {
+        damageMonsters(tableMonsters.getSelectionModel().getSelectedItems());
+    }
+
+    public void damageWithSaves() {
+        damageMonstersWithSaves(tableMonsters.getSelectionModel().getSelectedItems());
+    }
+
+    public void heal() {
+        healMonsters(tableMonsters.getSelectionModel().getSelectedItems());
+    }
+
+    public void healToFull() {
+        List<Monster> monsters = tableMonsters.getSelectionModel().getSelectedItems();
+        if (monsters == null) return;
+
+        for (Monster m : monsters) {
+            m.setHealth(m.getBaseHp());
+            monsterDao.addOrUpdate(m, false);
+        }
+
+        monsterDao.commit();
+        tableMonsters.refresh();
+    }
+
+    public void addMore() {
+        addMoreMonster(tableMonsters.getSelectionModel().getSelectedItems());
+    }
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         if (encounter == null) {
@@ -234,177 +341,8 @@ public class MainDialogController implements Initializable {
             party = partyDao.getCurrentParty();
         }
 
-        tableMonsters.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-        tableMonsters.setPlaceholder(new Label(""));
-
-        tableMonsters.getColumns().get(0).setCellFactory(getCustomCellFactory("num"));
-        tableMonsters.getColumns().get(1).setCellFactory(getCustomCellFactory("name"));
-        tableMonsters.getColumns().get(2).setCellFactory(getCustomCellFactory("baseHp"));
-        tableMonsters.getColumns().get(3).setCellFactory(getCustomCellFactory("health"));
-        tableMonsters.getColumns().get(4).setCellFactory(getCustomCellFactory("ac"));
-        tableMonsters.getColumns().get(5).setCellFactory(getCustomCellFactory("attk"));
-        tableMonsters.getColumns().get(6).setCellFactory(getCustomCellFactory("dmg"));
-        tableMonsters.getColumns().get(7).setCellFactory(getCustomCellFactory("dc"));
-        tableMonsters.getColumns().get(8).setCellFactory(getCustomCellFactory("cr"));
-        tableMonsters.getColumns().get(9).setCellFactory(getCustomCellFactory("xp"));
-
-        MenuItem damage = new MenuItem("Damage");
-        damage.setOnAction(e -> {
-            damageMonsters(tableMonsters.getSelectionModel().getSelectedItems());
-        });
-
-        MenuItem damageWithSaves = new MenuItem("Damage With Saves");
-        damageWithSaves.setOnAction(e -> {
-            damageMonstersWithSaves(tableMonsters.getSelectionModel().getSelectedItems());
-        });
-
-        MenuItem heal = new MenuItem("Heal");
-        heal.setOnAction(e -> {
-            healMonsters(tableMonsters.getSelectionModel().getSelectedItems());
-        });
-
-        MenuItem addClones = new MenuItem("Add more...");
-        addClones.setOnAction(e -> {
-            addMoreMonster(tableMonsters.getSelectionModel().getSelectedItems());
-        });
-
-        final ContextMenu contextMenu = new ContextMenu();
-        contextMenu.getItems().addAll(
-                damage, damageWithSaves, new SeparatorMenuItem(),
-                heal, new SeparatorMenuItem(),
-                addClones);
-        tableMonsters.setContextMenu(contextMenu);
-
-        Callback<TableColumn<Monster, Void>, TableCell<Monster, Void>> cellFactoryHurt = new Callback<TableColumn<Monster, Void>, TableCell<Monster, Void>>() {
-            @Override
-            public TableCell<Monster, Void> call(final TableColumn<Monster, Void> param) {
-                final TableCell<Monster, Void> cell = new TableCell<Monster, Void>() {
-
-                    private final Button btn = new Button("-");
-
-                    {
-                        btn.setOnAction((ActionEvent event) -> {
-                            List<Monster> monsters = new ArrayList<>();
-                            monsters.add(getTableView().getItems().get(getIndex()));
-                            damageMonsters(monsters);
-                        });
-                    }
-
-                    @Override
-                    public void updateItem(Void item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (empty) {
-                            setGraphic(null);
-                        } else {
-                            setGraphic(btn);
-                        }
-                    }
-                };
-                return cell;
-            }
-        };
-
-        TableColumn<Monster, Void> hurtColumn = new TableColumn<>("Hurt");
-        hurtColumn.setCellFactory(cellFactoryHurt);
-        hurtColumn.setStyle("-fx-alignment: CENTER;");
-        hurtColumn.setSortable(false);
-        hurtColumn.setEditable(false);
-        hurtColumn.setPrefWidth(40);
-
-        Callback<TableColumn<Monster, Void>, TableCell<Monster, Void>> cellFactoryHeal = new Callback<TableColumn<Monster, Void>, TableCell<Monster, Void>>() {
-            @Override
-            public TableCell<Monster, Void> call(final TableColumn<Monster, Void> param) {
-                final TableCell<Monster, Void> cell = new TableCell<Monster, Void>() {
-
-                    private final Button btn = new Button("+");
-
-                    {
-                        btn.setOnAction((ActionEvent event) -> {
-                            List<Monster> monsters = new ArrayList<>();
-                            monsters.add(getTableView().getItems().get(getIndex()));
-                            healMonsters(monsters);
-                        });
-                    }
-
-                    @Override
-                    public void updateItem(Void item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (empty) {
-                            setGraphic(null);
-                        } else {
-                            setGraphic(btn);
-                        }
-                    }
-                };
-                return cell;
-            }
-        };
-
-        TableColumn<Monster, Void> healColumn = new TableColumn<>("Heal");
-        healColumn.setCellFactory(cellFactoryHeal);
-        healColumn.setStyle("-fx-alignment: CENTER;");
-        healColumn.setSortable(false);
-        healColumn.setEditable(false);
-        healColumn.setPrefWidth(40);
-
-        tableMonsters.getColumns().add(hurtColumn);
-        tableMonsters.getColumns().add(healColumn);
-
-        TableColumn select = new TableColumn("Add XP");
-        select.setPrefWidth(50);
-        select.setStyle("-fx-alignment: CENTER;");
-        select.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Monster, CheckBox>, ObservableValue<CheckBox>>() {
-
-            @Override
-            public ObservableValue<CheckBox> call(
-                    TableColumn.CellDataFeatures<Monster, CheckBox> arg0) {
-                Monster m = arg0.getValue();
-
-                CheckBox checkBox = new CheckBox();
-
-                checkBox.selectedProperty().setValue(m.isActive());
-
-                checkBox.selectedProperty().addListener((ov, old_val, new_val) -> {
-                    m.setActive(new_val);
-                    if (new_val) {
-                        m.setSummoned(false);
-                    }
-                    monsterDao.addOrUpdate(m);
-                    refreshScreen();
-                });
-
-                return new SimpleObjectProperty<CheckBox>(checkBox);
-
-            }
-
-        });
-        tableMonsters.getColumns().addAll( select);
-
-        select = new TableColumn("Summ.");
-        select.setPrefWidth(50);
-        select.setStyle("-fx-alignment: CENTER;");
-        select.setCellValueFactory((Callback<TableColumn.CellDataFeatures<Monster, CheckBox>, ObservableValue<CheckBox>>) arg0 -> {
-            Monster m = arg0.getValue();
-
-            CheckBox checkBox = new CheckBox();
-
-            checkBox.selectedProperty().setValue(m.isSummoned());
-
-            checkBox.selectedProperty().addListener((ov, old_val, new_val) -> {
-                m.setSummoned(new_val);
-                if (new_val) {
-                    m.setActive(false);
-                }
-                monsterDao.addOrUpdate(m);
-                refreshScreen();
-            });
-
-            return new SimpleObjectProperty<>(checkBox);
-
-        });
-        tableMonsters.getColumns().addAll( select);
-
-        refreshScreen();
+        MainDialogInitialize initializer = new MainDialogInitialize(this);
+        initializer.initialize();
     }
 
     private void addMoreMonster(ObservableList<Monster> selectedItems) {
@@ -482,67 +420,6 @@ public class MainDialogController implements Initializable {
         } else {
             return "Deadly";
         }
-    }
-
-    private String addSignToNumber(Object o) {
-        int num = (Integer)o;
-        if (num > 0) {
-            return String.format("+%d", num);
-        } else {
-            return Integer.toString(num);
-        }
-    }
-
-    private boolean fieldIsOneOf(String field, String ... fields) {
-        for (String fieldToCheck : fields) {
-            if (field.equalsIgnoreCase(fieldToCheck)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private <Monster, Object> Callback<TableColumn<Monster, Object>, TableCell<Monster, Object>> getCustomCellFactory(final String field) {
-        return new Callback<>() {
-            @Override
-            public TableCell<Monster, Object> call(TableColumn<Monster, Object> param) {
-                return new TableCell<>() {
-                    @Override
-                    protected void updateItem(Object item, boolean empty) {
-                        super.updateItem(item, empty);
-
-                        if (!empty) {
-                            if (fieldIsOneOf(field, "attk", "dc")) {
-                                setText(addSignToNumber(item));
-                            } else if (fieldIsOneOf(field, "xp")) {
-                                setText(NumberFormat.getNumberInstance(Locale.US).format(item));
-                            } else {
-                                setText(item.toString());
-                            }
-
-                            if (fieldIsOneOf(field, "num", "baseHp", "health", "ac", "attk", "dmg", "dc", "cr", "xp")) {
-                                setStyle("-fx-alignment: CENTER;");
-                            } else {
-                                setStyle("-fx-alignment: CENTER-LEFT;");
-                            }
-
-                            org.culpan.mastertools.model.Monster data = (org.culpan.mastertools.model.Monster) getTableView().getItems().get(getIndex());
-                            if (!data.isActive() && !data.isSummoned()) {
-                                setTextFill(Color.LIGHTGRAY);
-                            } else if (data.getHealth() <= 0) {
-                                setTextFill(Color.LIGHTSALMON);
-                            } else if (data.isSummoned()) {
-                                setTextFill(Color.GREEN);
-                            } else {
-                                setTextFill(Color.BLACK);
-                            }
-                        }
-                    }
-
-                };
-            }
-        };
     }
 
     public void closeApp() {
