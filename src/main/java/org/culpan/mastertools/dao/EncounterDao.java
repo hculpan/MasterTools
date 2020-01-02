@@ -29,8 +29,8 @@ public class EncounterDao extends BaseDao<Encounter> {
     }
 
     @Override
-    public void addOrUpdate(Encounter item, boolean autocommit) {
-
+    public boolean addOrUpdate(Encounter item, boolean autocommit) {
+        return false;
     }
 
     public void deleteMonsters(Encounter item) {

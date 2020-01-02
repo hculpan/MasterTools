@@ -1,18 +1,9 @@
 package org.culpan.mastertools.model;
 
-public class SessionXp {
-    private int id;
+public class SessionXp extends BaseModel {
     private int sessionId;
     private int xp;
     private String description;
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
 
     public int getSessionId() {
         return sessionId;

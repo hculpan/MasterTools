@@ -4,20 +4,11 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-public class Session {
-    private int id;
+public class Session extends BaseModel {
     private Date startDate;
     private Date endDate;
 
     private final List<SessionXp> sessionXpList = new ArrayList<>();
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
 
     public Date getStartDate() {
         return startDate;

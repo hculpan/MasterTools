@@ -1,17 +1,8 @@
 package org.culpan.mastertools.model;
 
-public class Party {
-    private int id;
+public class Party extends BaseModel {
     private int memberCount;
     private int averageLevel;
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
 
     public int getMemberCount() {
         return memberCount;

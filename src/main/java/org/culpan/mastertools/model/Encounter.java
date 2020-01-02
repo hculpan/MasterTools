@@ -3,19 +3,10 @@ package org.culpan.mastertools.model;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Encounter {
-    private int id;
+public class Encounter extends BaseModel {
     private String name;
 
     private final List<Monster> monsters = new ArrayList<>();
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
 
     public String getName() {
         return name;

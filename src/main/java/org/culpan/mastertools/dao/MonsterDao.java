@@ -59,23 +59,28 @@ public class MonsterDao extends BaseDao<Monster> {
         executeUpdate("delete from monster_conditions where monster_id = " + monsterId, autocommit);
     }
 
-    public void addOrUpdateConditions(Monster monster) {
+    public boolean addOrUpdateConditions(Monster monster) {
+        boolean result = false;
+
         clearConditionsInDb(monster.getId(), false);
 
         for (MonsterCondition mc : monster.getConditions()) {
             mc.setMonsterId(monster.getId());
-            executeUpdate("insert into monster_conditions (monster_id, condition) " +
+            result = executeUpdate("insert into monster_conditions (monster_id, condition) " +
                     "values (" + monster.getId() + ",'" + mc.getCondition() + "')", false);
             mc.setId(getLastInsertId());
         }
 
         commit();
+
+        return result;
     }
 
     @Override
-    public void addOrUpdate(Monster item, boolean autocommit) {
+    public boolean addOrUpdate(Monster item, boolean autocommit) {
+        boolean result = false;
         if (exists(item)) {
-            executeUpdate("update monsters " +
+            result = executeUpdate("update monsters " +
                     "set encounter_id = " + item.getEncounterId() +
                     ",   number = " + item.getNumber() +
                     ",   name = '" + item.getName() + "' " +
@@ -99,9 +104,12 @@ public class MonsterDao extends BaseDao<Monster> {
                     ",'" + item.getCr() + "'," + item.getXp() + "," + (item.isActive() ? 1 : 0) +
                     "," + (item.isSummoned() ? 1 : 0) + ")", autocommit)) {
                 item.setId(getLastInsertId());
+                result = true;
             }
         }
-        addOrUpdateConditions(item);
+        if (result) result = addOrUpdateConditions(item);
+
+        return result;
     }
 
     @Override

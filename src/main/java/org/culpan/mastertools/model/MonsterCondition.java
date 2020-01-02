@@ -1,23 +1,14 @@
 package org.culpan.mastertools.model;
 
-public class MonsterCondition {
+public class MonsterCondition extends BaseModel {
     private static final String conditionAbr [] = {
             "Blind", "Charm", "Deaf", "Fa", "Fr", "Gr", "Inc", "Inv", "Pa", "Pe", "Po", "Pr", "Re", "St", "Un"
     };
 
     private static final String CONDITION_UNKNOWN = "UNKOWN";
 
-    private int id;
     private int monsterId;
     private String condition;
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
 
     public int getMonsterId() {
         return monsterId;

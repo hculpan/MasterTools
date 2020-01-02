@@ -1,11 +1,22 @@
 package org.culpan.mastertools.dao;
 
+import javafx.scene.control.Alert;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
+import org.culpan.mastertools.model.BaseModel;
+
 import java.io.File;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.sql.*;
 import java.util.List;
 
-public abstract class BaseDao<T> {
+public abstract class BaseDao<T extends BaseModel> {
     private static Connection conn;
+
+    private static String lastSql;
 
     public interface QueryResultsInterface {
         Object evaluateResults(ResultSet set) throws SQLException;
@@ -13,6 +24,37 @@ public abstract class BaseDao<T> {
 
     public void logDbError(Throwable t) {
         t.printStackTrace();
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Database Error");
+        alert.setHeaderText("There was a problem while executing a database statement: \n  " + lastSql);
+        alert.setContentText(t.getLocalizedMessage());
+
+// Create expandable Exception.
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        t.printStackTrace(pw);
+        String exceptionText = sw.toString();
+
+        Label label = new Label("The exception stacktrace was:");
+
+        TextArea textArea = new TextArea(exceptionText);
+        textArea.setEditable(false);
+        textArea.setWrapText(true);
+
+        textArea.setMaxWidth(Double.MAX_VALUE);
+        textArea.setMaxHeight(Double.MAX_VALUE);
+        GridPane.setVgrow(textArea, Priority.ALWAYS);
+        GridPane.setHgrow(textArea, Priority.ALWAYS);
+
+        GridPane expContent = new GridPane();
+        expContent.setMaxWidth(Double.MAX_VALUE);
+        expContent.add(label, 0, 0);
+        expContent.add(textArea, 0, 1);
+
+// Set expandable Exception into the dialog pane.
+        alert.getDialogPane().setExpandableContent(expContent);
+
+        alert.showAndWait();
     }
 
     protected void initDb(String dbPath) throws ClassNotFoundException, SQLException {
@@ -46,19 +88,21 @@ public abstract class BaseDao<T> {
 
     public abstract List<T> load();
 
-    public abstract void addOrUpdate(T item, boolean autocommit);
+    public abstract boolean addOrUpdate(T item, boolean autocommit);
 
-    public void addOrUpdate(T item) {
-        addOrUpdate(item, true);
+    public boolean addOrUpdate(T item) {
+        return addOrUpdate(item, true);
     }
 
     public abstract void delete(T item);
 
-    public abstract T find(T item);
-
     public abstract T findById(int id);
 
     protected abstract T itemFromResultSetRow(ResultSet rs) throws SQLException;
+
+    public T find(T item) {
+        return findById(item.getId());
+    };
 
     protected boolean existsHelper(String tableName, int id) {
         boolean result = false;
@@ -88,6 +132,7 @@ public abstract class BaseDao<T> {
 
     @SuppressWarnings("unchecked")
     protected List<T> executeListQuery(String sql, QueryResultsInterface queryResultsInterface) {
+        lastSql = sql;
         List<T> result = null;
 
         try {
@@ -107,6 +152,7 @@ public abstract class BaseDao<T> {
 
     @SuppressWarnings("unchecked")
     protected T executeItemQuery(String sql, QueryResultsInterface queryResultsInterface) {
+        lastSql = sql;
         T result = null;
 
         try {
@@ -146,6 +192,7 @@ public abstract class BaseDao<T> {
 
     @SuppressWarnings("unchecked")
     protected Object executeQuery(String sql, QueryResultsInterface queryResultsInterface) {
+        lastSql = sql;
         Object result = null;
 
         try {
@@ -164,6 +211,7 @@ public abstract class BaseDao<T> {
     }
 
     protected boolean executeUpdate(String sql, boolean commit) {
+        lastSql = sql;
         try {
             int rowCount;
             Statement stmt = connection().createStatement();
@@ -182,7 +230,13 @@ public abstract class BaseDao<T> {
         return executeUpdate(sql, true);
     }
 
-
+    public void rollback() {
+        try {
+            connection().rollback();
+        } catch (SQLException e) {
+            logDbError(e);
+        }
+    }
 
     public void commit() {
         try {

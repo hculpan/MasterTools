@@ -4,8 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class Monster {
-    private int id;
+public class Monster extends BaseModel {
     private int encounterId;
     private int number;
     private String name;
@@ -21,12 +20,8 @@ public class Monster {
     private boolean summoned = false;
     private final List<MonsterCondition> conditions = new ArrayList<>();
 
-    public int getId() {
-        return id;
-    }
-
     public void setId(int id) {
-        this.id = id;
+        super.setId(id);
         for (MonsterCondition condition : conditions) {
             condition.setMonsterId(id);
         }

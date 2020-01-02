@@ -6,16 +6,17 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Spinner?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="305.0" prefWidth="369.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.culpan.mastertools.controllers.CreateMonsterDialogController">
+<AnchorPane fx:id="baseWindow" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="305.0" prefWidth="369.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.culpan.mastertools.controllers.CreateMonsterDialogController">
    <children>
       <Label layoutX="14.0" layoutY="19.0" text="Monster name" />
-      <TextField fx:id="textName" layoutX="100.0" layoutY="14.0" prefHeight="27.0" prefWidth="249.0" />
-      <ComboBox fx:id="comboCr" layoutX="25.0" layoutY="71.0" onAction="#crChanged" prefWidth="150.0" />
+      <ComboBox fx:id="comboCr" layoutX="25.0" layoutY="71.0" onAction="#crChanged" prefHeight="27.0" prefWidth="123.0" />
       <Label layoutX="23.0" layoutY="54.0" text="CR" />
-      <Label layoutX="196.0" layoutY="54.0" text="XP" />
-      <TextField fx:id="textXp" editable="false" layoutX="196.0" layoutY="71.0" prefHeight="27.0" prefWidth="59.0" />
+      <Label layoutX="165.0" layoutY="54.0" text="XP" />
+      <TextField fx:id="textXp" editable="false" layoutX="165.0" layoutY="71.0" prefHeight="27.0" prefWidth="87.0" />
       <Spinner fx:id="spinnerNumber" layoutX="270.0" layoutY="71.0" prefHeight="27.0" prefWidth="79.0" />
       <Label layoutX="270.0" layoutY="54.0" text="Number" />
       <Label alignment="CENTER_RIGHT" layoutX="31.0" layoutY="117.0" text="Hit points" />
@@ -36,5 +37,14 @@
       <Label fx:id="labelDmg" layoutX="181.0" layoutY="207.0" prefWidth="75.0" />
       <Label fx:id="labelDc" layoutX="181.0" layoutY="237.0" prefWidth="75.0" />
       <CheckBox fx:id="checkSummoned" layoutX="49.0" layoutY="271.0" mnemonicParsing="false" text="Summoned" />
+      <Button layoutX="315.0" layoutY="14.0" mnemonicParsing="false" onAction="#lookupMonsterName">
+         <graphic>
+            <ImageView fitHeight="20.0" fitWidth="17.0" pickOnBounds="true" preserveRatio="true">
+               <image>
+                  <Image url="@images/Search-icon.png" />
+               </image>
+            </ImageView>
+         </graphic>
+      </Button>
    </children>
 </AnchorPane>

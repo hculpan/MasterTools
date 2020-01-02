@@ -29,12 +29,12 @@ public class PartyDao extends BaseDao<Party> {
     }
 
     @Override
-    public void addOrUpdate(Party item, boolean autocommit) {
+    public boolean addOrUpdate(Party item, boolean autocommit) {
         if (!exists(item)) {
             throw new RuntimeException("add operation not supported on Party");
         }
 
-        executeUpdate("update party " +
+        return executeUpdate("update party " +
                 "set member_count = " + item.getMemberCount() +
                 ",   average_level = " + item.getAverageLevel() +
                 " where id = 1");

@@ -1,28 +1,25 @@
 package org.culpan.mastertools.controllers;
 
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.paint.Color;
+import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.util.Callback;
 import org.culpan.mastertools.AppHelper;
-import org.culpan.mastertools.dao.EncounterDao;
-import org.culpan.mastertools.dao.MonsterDao;
-import org.culpan.mastertools.dao.PartyDao;
-import org.culpan.mastertools.dao.SessionDao;
+import org.culpan.mastertools.dao.*;
 import org.culpan.mastertools.model.*;
+import org.culpan.mastertools.util.JsonParser;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
@@ -33,8 +30,18 @@ public class MainDialogController implements Initializable {
     private final static PartyDao partyDao = new PartyDao();
     private final static MonsterDao monsterDao = new MonsterDao();
     private final static SessionDao sessionDao = new SessionDao();
+    private final static PublishedMonsterDao publishedMonsterDao = new PublishedMonsterDao();
 
     private final static DateFormat sessionDateFormat = new SimpleDateFormat("EEE, MMM d, yyyy  h:mm aaa");
+
+    private final static int xpPerCr[] = {
+            25, 50, 100, 200, 450, 700, 1100, 1800,
+            2300, 2900, 3900, 5000, 5900,
+            7200, 8400, 10000, 11500, 13000,
+            15000, 18000, 20000, 22000, 25000,
+            33000, 41000, 50000, 62000, 75000,
+            90000, 105000, 120000, 135000, 155000
+    };
 
     // 20x4
     private static final int xpThreasholds[][] = {
@@ -106,6 +113,94 @@ public class MainDialogController implements Initializable {
 
     public void setMenuCombatant(Menu menuCombatant) {
         this.menuCombatant = menuCombatant;
+    }
+
+    private PublishedMonster buildPublishedMonster(JsonParser.JsonObject base, String json) {
+        PublishedMonster monster = new PublishedMonster();
+
+        monster.setName(base.getPropertyValue("name"));
+        monster.setBaseHp(Integer.parseInt(base.getPropertyValue("hit_points")));
+        monster.setAc(Integer.parseInt(base.getPropertyValue("armor_class")));
+        String crStr = base.getPropertyValue("challenge_rating");
+        if (crStr.startsWith("0.125")) {
+            monster.setCr("1/8");
+            monster.setXp(xpPerCr[0]);
+        } else if (crStr.startsWith("0.25")) {
+                monster.setCr("1/4");
+                monster.setXp(xpPerCr[1]);
+        } else if (crStr.startsWith("0.5")) {
+            monster.setCr("1/2");
+            monster.setXp(xpPerCr[2]);
+        } else {
+            monster.setCr(crStr);
+            monster.setXp(xpPerCr[Integer.parseInt(crStr) + 2]);
+        }
+        monster.setJson(json.replace("'", ""));
+
+        return monster;
+    }
+
+    private void persistPublishedMonsters(String [] jsons) {
+        publishedMonsterDao.deleteAll();
+
+        JsonParser parser = new JsonParser();
+        for (int i = 0; i < jsons.length; i++) {
+            String json = jsons[i];
+
+            JsonParser.JsonObject o = (JsonParser.JsonObject) parser.parse(json);
+            if (parser.getErrors().size() > 0) {
+                String errorMsg = "";
+                for (String err : parser.getErrors()) {
+                    errorMsg += err + "\n";
+                }
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Invalid Json");
+                alert.setHeaderText("Failed to parse json");
+
+                alert.setContentText("The json for monster " + (i + 1) + " failed to parse.\n\n" + errorMsg);
+
+                alert.showAndWait();
+                publishedMonsterDao.rollback();
+                return;
+            }
+
+            publishedMonsterDao.addOrUpdate(buildPublishedMonster(o, json), false);
+        }
+
+        publishedMonsterDao.commit();
+    }
+
+    public void loadMonstersToDb() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Open Monsters Info File");
+        fileChooser.setInitialDirectory(
+                new File(System.getProperty("user.home"))
+        );
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("JSON", "*.json"),
+                new FileChooser.ExtensionFilter("All Files", "*.*")
+        );
+        File file = fileChooser.showOpenDialog(tableMonsters.getScene().getWindow());
+        if (file != null) {
+            try {
+                String content = new String(Files.readAllBytes(Paths.get(file.getAbsolutePath())));
+                String [] monsterJsonArray = content.split("\"index\":");
+                for (int i = 1; i < monsterJsonArray.length; i++) {
+                    String json = monsterJsonArray[i];
+                    if (i < monsterJsonArray.length - 1) {
+                        int lindex = json.lastIndexOf(",");
+                        json = "  {\n    \"index\":" + json.substring(0, lindex);
+                    } else {
+                        json = "  {\n    \"index\":" + json.substring(0, json.length() - 1);
+                    }
+                    monsterJsonArray[i] = json;
+                }
+
+                persistPublishedMonsters(Arrays.copyOfRange(monsterJsonArray, 1, monsterJsonArray.length));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public void editConditions() {

@@ -3,30 +3,22 @@ package org.culpan.mastertools.controllers;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.Group;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.VBox;
-import javafx.scene.web.WebEngine;
-import javafx.scene.web.WebView;
-import javafx.stage.Modality;
+import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import org.culpan.mastertools.dao.EncounterDao;
+import org.culpan.mastertools.dao.PublishedMonsterDao;
 import org.culpan.mastertools.model.Monster;
+import org.culpan.mastertools.model.PublishedMonster;
+import org.culpan.mastertools.util.AutoCompleteTextField;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.net.URL;
-import java.net.URLConnection;
 import java.text.NumberFormat;
-import java.util.Locale;
-import java.util.ResourceBundle;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.*;
 
 public class CreateMonsterDialogController implements Initializable {
     private final static EncounterDao encounterDao = new EncounterDao();
+    private final static PublishedMonsterDao publishedDao = new PublishedMonsterDao();
 
     private final static int xpPerCr[] = {
             25, 50, 100, 200, 450, 700, 1100, 1800,
@@ -87,6 +79,11 @@ public class CreateMonsterDialogController implements Initializable {
             21,22,22,22,23
     };
 
+    private final Map<String, PublishedMonsterDao.MonsterSummary> summaryMap = new HashMap<>();
+
+    @FXML
+    Pane baseWindow;
+
     @FXML
     ComboBox<String> comboCr;
 
@@ -96,8 +93,7 @@ public class CreateMonsterDialogController implements Initializable {
     @FXML
     Spinner<Integer> spinnerNumber;
 
-    @FXML
-    TextField textName;
+    AutoCompleteTextField textName;
 
     @FXML
     TextField textHp;
@@ -131,6 +127,36 @@ public class CreateMonsterDialogController implements Initializable {
 
     @FXML
     CheckBox checkSummoned;
+
+    public void lookupMonsterName() {
+        if (textName.getText() == null || textName.getText().trim().isEmpty()) return;
+
+        if (summaryMap.containsKey(textName.getText())) {
+            PublishedMonsterDao.MonsterSummary summary = summaryMap.get(textName.getText());
+            PublishedMonster monster = publishedDao.findById(summary.getId());
+            if (monster != null) {
+                            ;
+                comboCr.setValue(monster.getCr());
+                textXp.setText(NumberFormat.getNumberInstance(Locale.US).format(spinnerNumber.getValue() * monster.getXp()));
+                textHp.setText(Integer.toString(monster.getBaseHp()));
+                textAc.setText(Integer.toString(monster.getAc()));
+
+                // Calculate missing non-standard stuff
+                int crIndex;
+                if (monster.getCr().startsWith("1/8")) crIndex = 0;
+                else if (monster.getCr().startsWith("1/4")) crIndex = 1;
+                else if (monster.getCr().startsWith("1/2")) crIndex = 2;
+                else crIndex = Integer.parseInt(monster.getCr()) + 2;
+
+                textAttk.setText(formatWithSign(abPerCr[crIndex]));
+                labelAttk.setText(formatWithSign(abPerCr[crIndex]));
+                textDmg.setText(calculateAverageValue(dmgPerCr[crIndex]));
+                labelDmg.setText(dmgPerCr[crIndex]);
+                textDc.setText(Integer.toString(savePerCr[crIndex]));
+                labelDc.setText(Integer.toString(savePerCr[crIndex]));
+            }
+        }
+    }
 
     public void okClicked() {
         if (textName.getText() == null || textName.getText().trim().isEmpty()) {
@@ -182,8 +208,8 @@ public class CreateMonsterDialogController implements Initializable {
         labelAttk.setText(formatWithSign(abPerCr[crIndex]));
         textDmg.setText(calculateAverageValue(dmgPerCr[crIndex]));
         labelDmg.setText(dmgPerCr[crIndex]);
-        textDc.setText(formatWithSign(savePerCr[crIndex]));
-        labelDc.setText(formatWithSign(savePerCr[crIndex]));
+        textDc.setText(Integer.toString(savePerCr[crIndex]));
+        labelDc.setText(Integer.toString(savePerCr[crIndex]));
 
         textXp.setText(NumberFormat.getNumberInstance(Locale.US).format(spinnerNumber.getValue() * xpPerCr[crIndex]));
     }
@@ -220,6 +246,19 @@ public class CreateMonsterDialogController implements Initializable {
                 new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 100, 1);
         spinnerNumber.setValueFactory(valueFactory);
         spinnerNumber.valueProperty().addListener((observable, oldValue, newValue) -> updateUi());
+
+        textName = new AutoCompleteTextField();
+//        textName.getEntries().addAll(Arrays.asList("Aboleth", "Abomination", "Stone Giant", "Stone Golem", "Zombie"));
+        textName.setPrefSize(211, 27);
+        textName.setLayoutX(100);
+        textName.setLayoutY(14);
+        baseWindow.getChildren().add(textName);
+
+        List<PublishedMonsterDao.MonsterSummary> summaries = publishedDao.getAllSummaries();
+        for (PublishedMonsterDao.MonsterSummary summary : summaries) {
+            summaryMap.put(summary.getName(), summary);
+            textName.getEntries().add(summary.getName());
+        }
 
         updateUi();
     }

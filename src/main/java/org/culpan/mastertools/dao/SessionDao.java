@@ -51,7 +51,8 @@ public class SessionDao extends BaseDao<Session> {
     }
 
     @Override
-    public void addOrUpdate(Session item, boolean autocommit) {
+    public boolean addOrUpdate(Session item, boolean autocommit) {
+        boolean result = false;
         if (exists(item)) {
             String startDate = (item.getStartDate() != null ? dateFormat.format(item.getStartDate()) : null);
             String endDate = (item.getEndDate() != null ? dateFormat.format(item.getEndDate()) : null);
@@ -69,8 +70,8 @@ public class SessionDao extends BaseDao<Session> {
             }
             sql += "where id = " + item.getId();
 
-            executeUpdate(sql, false);
-            deleteSessionXps(item.getId(), false);
+            result = executeUpdate(sql, false);
+            if (result) deleteSessionXps(item.getId(), false);
         } else {
             String startDate = (item.getStartDate() != null ? dateFormat.format(item.getStartDate()) : null);
             String endDate = (item.getEndDate() != null ? dateFormat.format(item.getEndDate()) : null);
@@ -87,11 +88,13 @@ public class SessionDao extends BaseDao<Session> {
                 sql += "null )";
             }
 
-            executeUpdate(sql, false);
-            item.setId(getLastInsertId());
+            result = executeUpdate(sql, false);
+            if (result) item.setId(getLastInsertId());
         }
         addSessionXps(item.getSessionXpList(), false);
         commit();
+
+        return result;
     }
 
     @Override
