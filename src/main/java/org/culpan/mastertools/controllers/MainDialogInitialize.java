@@ -141,6 +141,12 @@ public class MainDialogInitialize {
                 (node, monster, item) -> updateItem(node, monster, monster.getConditionAbrText(), false)));
         controller.tableMonsters.getColumns().add(conditionsColumn);
 
+        TableColumn<Monster, Object> notesColumn = new TableColumn<>("Notes");
+        notesColumn.setPrefWidth(135);
+        notesColumn.setCellFactory(getTextCellFactory(
+                (node, monster, item) -> updateItem(node, monster, monster.getNotes(), false)));
+        controller.tableMonsters.getColumns().add(notesColumn);
+
         controller.refreshScreen();
     }
 

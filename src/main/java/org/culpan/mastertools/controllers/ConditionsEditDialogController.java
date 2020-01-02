@@ -69,7 +69,7 @@ public class ConditionsEditDialogController {
             for (Monster monster : monsters) {
                 monster.getConditions().clear();
                 monster.getConditions().addAll(newConditions);
-                monsterDao.addOrUpdateConditions(monster);
+                monsterDao.addOrUpdateConditions(monster, true);
             }
         }
 

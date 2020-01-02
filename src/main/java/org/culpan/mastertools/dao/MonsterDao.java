@@ -59,8 +59,8 @@ public class MonsterDao extends BaseDao<Monster> {
         executeUpdate("delete from monster_conditions where monster_id = " + monsterId, autocommit);
     }
 
-    public boolean addOrUpdateConditions(Monster monster) {
-        boolean result = false;
+    public boolean addOrUpdateConditions(Monster monster, boolean autocommit) {
+        boolean result = true;
 
         clearConditionsInDb(monster.getId(), false);
 
@@ -68,10 +68,11 @@ public class MonsterDao extends BaseDao<Monster> {
             mc.setMonsterId(monster.getId());
             result = executeUpdate("insert into monster_conditions (monster_id, condition) " +
                     "values (" + monster.getId() + ",'" + mc.getCondition() + "')", false);
+            if (!result) break;
             mc.setId(getLastInsertId());
         }
 
-        commit();
+        if (result && autocommit) commit();
 
         return result;
     }
@@ -94,20 +95,22 @@ public class MonsterDao extends BaseDao<Monster> {
                     ",   xp = " + item.getXp() +
                     ",   active = " + (item.isActive() ? 1 : 0) +
                     ",   summoned = " + (item.isSummoned() ? 1 : 0) +
+                    ",   notes = '" + (item.getNotes() != null ? item.getNotes() : "") + "' " +
                     " where id = " + item.getId(), autocommit);
         } else {
             if (executeUpdate("insert into monsters " +
-                    "(encounter_id, number, name, base_hp, health, ac, attk, dmg, dc, cr, xp, active, summoned) " +
+                    "(encounter_id, number, name, base_hp, health, ac, attk, dmg, dc, cr, xp, active, summoned, notes) " +
                     "values (" + item.getEncounterId() + "," + item.getNumber() + ",'" + item.getName() +
                     "'," + item.getBaseHp() + "," + item.getHealth() + "," + item.getAc() +
                     "," + item.getAttk() + ",'" + item.getDmg() + "'," + item.getDc() +
                     ",'" + item.getCr() + "'," + item.getXp() + "," + (item.isActive() ? 1 : 0) +
-                    "," + (item.isSummoned() ? 1 : 0) + ")", autocommit)) {
+                    "," + (item.isSummoned() ? 1 : 0) + ",'" + (item.getNotes() != null ? item.getNotes() : "") + "')"
+                    , autocommit)) {
                 item.setId(getLastInsertId());
                 result = true;
             }
         }
-        if (result) result = addOrUpdateConditions(item);
+        if (result) result = addOrUpdateConditions(item, autocommit);
 
         return result;
     }
@@ -148,6 +151,7 @@ public class MonsterDao extends BaseDao<Monster> {
         monster.setXp(rs.getInt("xp"));
         monster.setActive(rs.getInt("active") > 0);
         monster.setSummoned(rs.getInt("summoned") > 0);
+        monster.setNotes(rs.getString("notes"));
 
         monster.getConditions().clear();
         monster.getConditions().addAll(loadConditions(monster.getId()));

@@ -1,6 +1,8 @@
 package org.culpan.mastertools.controllers;
 
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -83,6 +85,9 @@ public class MainDialogController implements Initializable {
     @FXML
     Menu menuCombatant;
 
+    @FXML
+    CheckBox checkHideDead;
+
     public Encounter getEncounter() {
         return encounter;
     }
@@ -113,6 +118,47 @@ public class MainDialogController implements Initializable {
 
     public void setMenuCombatant(Menu menuCombatant) {
         this.menuCombatant = menuCombatant;
+    }
+
+    public void updateNotes() {
+        if (tableMonsters.getSelectionModel().getSelectedItems().size() == 0) return;
+
+        TextInputDialog dialog = new TextInputDialog("");
+        dialog.setTitle("Monster Notes");
+        dialog.setHeaderText("Add a note to the selected monsters");
+        dialog.setContentText("Note");
+
+        Optional<String> descr = dialog.showAndWait();
+        if (descr.isPresent()) {
+            for (Monster m : tableMonsters.getSelectionModel().getSelectedItems()) {
+                m.setNotes(descr.get());
+                if (!monsterDao.addOrUpdate(m, false)) {
+                    monsterDao.rollback();
+                    return;
+                }
+            }
+
+            monsterDao.commit();
+        }
+
+        encounter = encounterDao.getCurrentEncounter();
+        refreshScreen();
+    }
+
+    public void clearNotes() {
+        if (tableMonsters.getSelectionModel().getSelectedItems().size() == 0) return;
+
+        for (Monster m : tableMonsters.getSelectionModel().getSelectedItems()) {
+            m.setNotes("");
+            if (!monsterDao.addOrUpdate(m, false)) {
+                monsterDao.rollback();
+                return;
+            }
+        }
+
+        monsterDao.commit();
+        encounter = encounterDao.getCurrentEncounter();
+        refreshScreen();
     }
 
     private PublishedMonster buildPublishedMonster(JsonParser.JsonObject base, String json) {
@@ -300,6 +346,10 @@ public class MainDialogController implements Initializable {
         labelXp.setText(xpText);
     }
 
+    public void onCheckHideDead() {
+        refreshScreen();
+    }
+
     public void refreshScreen() {
         tableMonsters.getItems().clear();
 
@@ -307,7 +357,10 @@ public class MainDialogController implements Initializable {
 
         updateSessionInfo();
 
-        tableMonsters.getItems().addAll(encounter.getMonsters());
+        FilteredList<Monster> list = new FilteredList<>(FXCollections.observableArrayList(encounter.getMonsters()), p -> true );
+        list.setPredicate(m -> m.getHealth() > 0 || !checkHideDead.isSelected());
+
+        tableMonsters.getItems().addAll(list);
 
         tableMonsters.refresh();
     }
@@ -347,12 +400,7 @@ public class MainDialogController implements Initializable {
                     if (data.getHealth() < 0) {
                         data.setHealth(0);
                     }
-                    if (data.isSummoned() && data.getHealth() == 0) {
-                        monsterDao.delete(data);
-                        encounter = encounterDao.getCurrentEncounter();
-                    } else {
-                        monsterDao.addOrUpdate(data);
-                    }
+                    monsterDao.addOrUpdate(data);
                 }
             } catch (Exception e) {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
