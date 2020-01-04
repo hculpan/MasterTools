@@ -1,6 +1,7 @@
 module MasterTools.main {
     requires javafx.controls;
     requires javafx.fxml;
+    requires javafx.web;
     requires java.sql;
     requires sqlite.jdbc;
 

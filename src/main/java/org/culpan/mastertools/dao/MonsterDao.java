@@ -95,16 +95,19 @@ public class MonsterDao extends BaseDao<Monster> {
                     ",   xp = " + item.getXp() +
                     ",   active = " + (item.isActive() ? 1 : 0) +
                     ",   summoned = " + (item.isSummoned() ? 1 : 0) +
-                    ",   notes = '" + (item.getNotes() != null ? item.getNotes() : "") + "' " +
+                    ",   notes = '" + (item.getNotes() != null ? item.getNotes() : "") + "', " +
+                    ",   published_monster_id = " + item.getPublishedMonsterId() +
                     " where id = " + item.getId(), autocommit);
         } else {
             if (executeUpdate("insert into monsters " +
-                    "(encounter_id, number, name, base_hp, health, ac, attk, dmg, dc, cr, xp, active, summoned, notes) " +
+                    "(encounter_id, number, name, base_hp, health, ac, attk, dmg, dc, cr, xp, active, " +
+                            "summoned, notes, published_monster_id) " +
                     "values (" + item.getEncounterId() + "," + item.getNumber() + ",'" + item.getName() +
                     "'," + item.getBaseHp() + "," + item.getHealth() + "," + item.getAc() +
                     "," + item.getAttk() + ",'" + item.getDmg() + "'," + item.getDc() +
                     ",'" + item.getCr() + "'," + item.getXp() + "," + (item.isActive() ? 1 : 0) +
-                    "," + (item.isSummoned() ? 1 : 0) + ",'" + (item.getNotes() != null ? item.getNotes() : "") + "')"
+                    "," + (item.isSummoned() ? 1 : 0) + ",'" + (item.getNotes() != null ? item.getNotes() : "") +
+                    "'," + item.getPublishedMonsterId() + ")"
                     , autocommit)) {
                 item.setId(getLastInsertId());
                 result = true;
@@ -152,6 +155,7 @@ public class MonsterDao extends BaseDao<Monster> {
         monster.setActive(rs.getInt("active") > 0);
         monster.setSummoned(rs.getInt("summoned") > 0);
         monster.setNotes(rs.getString("notes"));
+        monster.setPublishedMonsterId(rs.getInt("published_monster_id"));
 
         monster.getConditions().clear();
         monster.getConditions().addAll(loadConditions(monster.getId()));

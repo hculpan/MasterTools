@@ -2,7 +2,7 @@ package org.culpan.mastertools.model;
 
 public class MonsterCondition extends BaseModel {
     private static final String conditionAbr [] = {
-            "Blind", "Charm", "Deaf", "Fa", "Fr", "Gr", "Inc", "Inv", "Pa", "Pe", "Po", "Pr", "Re", "St", "Un"
+            "Bl", "Ch", "De", "Fa", "Fr", "Gr", "Inc", "Inv", "Pa", "Pe", "Po", "Pr", "Re", "St", "Un"
     };
 
     private static final String CONDITION_UNKNOWN = "UNKOWN";

@@ -65,7 +65,7 @@ public class AutoCompleteTextField extends TextField
     private void populatePopup(List<String> searchResult) {
         List<CustomMenuItem> menuItems = new LinkedList<>();
         // If you'd like more entries, modify this line.
-        int maxEntries = 10;
+        int maxEntries = 100;
         int count = Math.min(searchResult.size(), maxEntries);
         for (int i = 0; i < count; i++)
         {

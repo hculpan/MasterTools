@@ -81,6 +81,8 @@ public class CreateMonsterDialogController implements Initializable {
 
     private final Map<String, PublishedMonsterDao.MonsterSummary> summaryMap = new HashMap<>();
 
+    private int publishedMonsterId = 0;
+
     @FXML
     Pane baseWindow;
 
@@ -135,7 +137,6 @@ public class CreateMonsterDialogController implements Initializable {
             PublishedMonsterDao.MonsterSummary summary = summaryMap.get(textName.getText());
             PublishedMonster monster = publishedDao.findById(summary.getId());
             if (monster != null) {
-                            ;
                 comboCr.setValue(monster.getCr());
                 textXp.setText(NumberFormat.getNumberInstance(Locale.US).format(spinnerNumber.getValue() * monster.getXp()));
                 textHp.setText(Integer.toString(monster.getBaseHp()));
@@ -154,6 +155,8 @@ public class CreateMonsterDialogController implements Initializable {
                 labelDmg.setText(dmgPerCr[crIndex]);
                 textDc.setText(Integer.toString(savePerCr[crIndex]));
                 labelDc.setText(Integer.toString(savePerCr[crIndex]));
+
+                publishedMonsterId = monster.getId();
             }
         }
     }
@@ -180,6 +183,7 @@ public class CreateMonsterDialogController implements Initializable {
         m.setCr(comboCr.getValue());
         int totalXp = Integer.parseInt(textXp.getText().replace(",",""));
         m.setXp(totalXp/spinnerNumber.getValue());
+        m.setPublishedMonsterId(publishedMonsterId);
         if (checkSummoned.isSelected()) {
             m.setActive(false);
             m.setSummoned(true);

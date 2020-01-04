@@ -88,6 +88,8 @@ public class MainDialogController implements Initializable {
     @FXML
     CheckBox checkHideDead;
 
+    private Stage attackPopupWindow;
+
     public Encounter getEncounter() {
         return encounter;
     }
@@ -118,6 +120,14 @@ public class MainDialogController implements Initializable {
 
     public void setMenuCombatant(Menu menuCombatant) {
         this.menuCombatant = menuCombatant;
+    }
+
+    public Stage getAttackPopupWindow() {
+        return attackPopupWindow;
+    }
+
+    public void setAttackPopupWindow(Stage attackPopupWindow) {
+        this.attackPopupWindow = attackPopupWindow;
     }
 
     public void updateNotes() {

@@ -20,6 +20,7 @@ public class Monster extends BaseModel {
     private boolean summoned = false;
     private final List<MonsterCondition> conditions = new ArrayList<>();
     private String notes;
+    private int publishedMonsterId;
 
     public void setId(int id) {
         super.setId(id);
@@ -152,6 +153,14 @@ public class Monster extends BaseModel {
         this.notes = notes;
     }
 
+    public int getPublishedMonsterId() {
+        return publishedMonsterId;
+    }
+
+    public void setPublishedMonsterId(int publishedMonsterId) {
+        this.publishedMonsterId = publishedMonsterId;
+    }
+
     @Override
     public Object clone() {
         Monster m = new Monster();
@@ -173,6 +182,7 @@ public class Monster extends BaseModel {
             m.conditions.add((MonsterCondition)mc.clone());
         }
         m.setNotes(notes);
+        m.setPublishedMonsterId(publishedMonsterId);
         return m;
     }
 }

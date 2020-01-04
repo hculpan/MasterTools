@@ -34,12 +34,6 @@
             <TableColumn prefWidth="56.0" text="Attk">
                 <cellValueFactory><PropertyValueFactory property="attk" /></cellValueFactory>
             </TableColumn>
-            <TableColumn prefWidth="56.0" text="Dmg">
-                <cellValueFactory><PropertyValueFactory property="dmg" /></cellValueFactory>
-            </TableColumn>
-            <TableColumn prefWidth="56.0" text="DC">
-                <cellValueFactory><PropertyValueFactory property="dc" /></cellValueFactory>
-            </TableColumn>
             <TableColumn prefWidth="56.0" text="CR">
                 <cellValueFactory><PropertyValueFactory property="cr" /></cellValueFactory>
             </TableColumn>

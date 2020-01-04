@@ -93,6 +93,14 @@ public class PublishedMonsterDao extends BaseDao<PublishedMonster> {
         return result;
     }
 
+    public String getJsonForId(int id) {
+        return (String)executeQuery("select json from published_monsters where id = " + id,
+                rs -> {
+                   if (rs.next()) return rs.getString("json");
+                   return null;
+                });
+    }
+
     public void deleteAll() {
         executeUpdate("delete from published_monsters ");
     }

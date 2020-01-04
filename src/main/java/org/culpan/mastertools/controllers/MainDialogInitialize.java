@@ -3,14 +3,28 @@ package org.culpan.mastertools.controllers;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.geometry.Point2D;
+import javafx.scene.Group;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.paint.Color;
+import javafx.scene.web.WebView;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import javafx.util.Callback;
 import org.culpan.mastertools.dao.MonsterDao;
+import org.culpan.mastertools.dao.PublishedMonsterDao;
 import org.culpan.mastertools.model.Monster;
+import org.culpan.mastertools.util.JsonParser;
 
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Function;
 
 public class MainDialogInitialize {
@@ -23,6 +37,7 @@ public class MainDialogInitialize {
     }
 
     private final static MonsterDao monsterDao = new MonsterDao();
+    private final static PublishedMonsterDao publishedMonsterDao = new PublishedMonsterDao();
 
     private MainDialogController controller;
 
@@ -48,6 +63,72 @@ public class MainDialogInitialize {
         node.setText(text);
     }
 
+    private void popupAttackWindow(Monster m, double x, double y) {
+        if (controller.getAttackPopupWindow() != null) return;
+        if (m.getPublishedMonsterId() <= 0) return;
+
+        AnchorPane pane = new AnchorPane();
+        Scene scene = new Scene(pane);
+        controller.setAttackPopupWindow(new Stage());
+        controller.getAttackPopupWindow().setWidth(400);
+        controller.getAttackPopupWindow().setHeight(400);
+        controller.getAttackPopupWindow().setX(x + 30);
+        controller.getAttackPopupWindow().setY(y - 200);
+        controller.getAttackPopupWindow().setScene(scene);
+        controller.getAttackPopupWindow().initStyle(StageStyle.UNDECORATED);
+        controller.getAttackPopupWindow().focusedProperty().addListener((ov, onHidden, onShown) -> {
+            if (onShown) {
+                Stage stage = (Stage)controller.tableMonsters.getScene().getWindow();
+                stage.setOnHiding(e -> {
+                    if (controller.getAttackPopupWindow() != null) controller.getAttackPopupWindow().close();
+                });
+            } else if (onHidden) {
+                if (controller.getAttackPopupWindow() != null) {
+                    controller.getAttackPopupWindow().close();
+                    controller.setAttackPopupWindow(null);
+                }
+            }
+        });
+        controller.getAttackPopupWindow().addEventHandler(KeyEvent.KEY_PRESSED, e -> {
+            if (e.getCode() == KeyCode.ESCAPE) {
+                controller.getAttackPopupWindow().close();
+                controller.setAttackPopupWindow(null);
+            }
+        });
+        String json = publishedMonsterDao.getJsonForId(m.getPublishedMonsterId());
+        JsonParser parser = new JsonParser();
+        JsonParser.JsonObject root = (JsonParser.JsonObject)parser.parse(json);
+        JsonParser.JsonArray actions = (JsonParser.JsonArray)root.getProperty("actions");
+
+        String xml = "";
+
+        if (actions.size() > 0) {
+            xml += String.format("<h3>Actions for %s</h3><hr/><br/>", m.getName());
+            for (int i = 0; i < actions.size(); i++) {
+                JsonParser.JsonObject action = (JsonParser.JsonObject) actions.get(i);
+                xml += String.format("<em>%s</em><br/> %s <br/><br/>",
+                        action.getPropertyValue("name"),
+                        action.getPropertyValue("desc"));
+            }
+        }
+
+        actions = (JsonParser.JsonArray)root.getProperty("special_abilities");
+        if (actions.size() > 0) {
+            xml += String.format("<hr/><h3>Special Abilities for %s</h3><hr/><br/>", m.getName());
+            for (int i = 0; i < actions.size(); i++) {
+                JsonParser.JsonObject action = (JsonParser.JsonObject) actions.get(i);
+                xml += String.format("<em>%s</em><br/> %s <br/><br/>",
+                        action.getPropertyValue("name"),
+                        action.getPropertyValue("desc"));
+            }
+        }
+        WebView webView = new WebView();
+        webView.setPrefSize(400, 400);
+        pane.getChildren().add(webView);
+        webView.getEngine().loadContent(xml);
+        controller.getAttackPopupWindow().show();
+    }
+
     public void initialize() {
         controller.tableMonsters.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         controller.tableMonsters.setPlaceholder(new Label(""));
@@ -62,16 +143,29 @@ public class MainDialogInitialize {
                 (node, monster, item) -> updateItem(node, monster, item.toString(), true)));
         controller.tableMonsters.getColumns().get(4).setCellFactory(getTextCellFactory(
                 (node, monster, item) -> updateItem(node, monster, item.toString(), true)));
-        controller.tableMonsters.getColumns().get(5).setCellFactory(getTextCellFactory(
-                (node, monster, item) -> updateItem(node, monster, addSignToNumber(item), true)));
+        TableColumn<Monster, Void> attkColumn = new TableColumn<>("Actions");
+        attkColumn.setCellFactory(getButtonCellFactory("->",
+                (TableCell<Monster, Void> t) -> event -> {
+                    Monster m = t.getTableView().getItems().get(t.getIndex());
+                    // This is kludge.  For some reason, the TableCell's localToScreen gives me a
+                    // bad X but good Y.  So I grabbed X from TableView's localToScreen and then nudge a tad
+                    double x, y;
+                    Point2D screenCoordinates = t.localToScreen(t.getLayoutX(), t.getLayoutY());
+                    Point2D windowCoordinates = controller.tableMonsters.localToScreen(t.getLayoutX(), t.getLayoutY());
+                    x = windowCoordinates.getX() + 10;
+                    y = screenCoordinates.getY();
+                    if (y < 200) y = 200;
+                    popupAttackWindow(m, x, y);
+                }));
+        attkColumn.setStyle("-fx-alignment: CENTER;");
+        attkColumn.setSortable(false);
+        attkColumn.setEditable(false);
+        attkColumn.setPrefWidth(50);
+        controller.tableMonsters.getColumns().set(5, attkColumn);
         controller.tableMonsters.getColumns().get(6).setCellFactory(getTextCellFactory(
                 (node, monster, item) -> updateItem(node, monster, item.toString(), true)));
         controller.tableMonsters.getColumns().get(7).setCellFactory(getTextCellFactory(
-                (node, monster, item) -> updateItem(node, monster, item.toString(), true)));
-        controller.tableMonsters.getColumns().get(8).setCellFactory(getTextCellFactory(
-                (node, monster, item) -> updateItem(node, monster, item.toString(), true)));
-        controller.tableMonsters.getColumns().get(9).setCellFactory(getTextCellFactory(
-                (node, monster, item) -> updateItem(node, monster, item.toString(), true)));
+                (node, monster, item) -> updateItem(node, monster, NumberFormat.getNumberInstance(Locale.US).format(item), true)));
 
         // Pull popup menu from Combatant top-level menu
         final ContextMenu contextMenu = new ContextMenu();
@@ -89,14 +183,27 @@ public class MainDialogInitialize {
         controller.tableMonsters.setContextMenu(contextMenu);
 
         TableColumn<Monster, Void> hurtColumn = new TableColumn<>("Hurt");
-        hurtColumn.setCellFactory(getButtonCellFactory("-"));
+        hurtColumn.setCellFactory(getButtonCellFactory("-",
+                (TableCell<Monster, Void> t) -> event -> {
+                    List<Monster> monsters = new ArrayList<>();
+                    monsters.add(t.getTableView().getItems().get(t.getIndex()));
+                    controller.damageMonsters(monsters);
+                },
+                m -> {
+                    return m.getPublishedMonsterId() <= 0;
+                }));
         hurtColumn.setStyle("-fx-alignment: CENTER;");
         hurtColumn.setSortable(false);
         hurtColumn.setEditable(false);
         hurtColumn.setPrefWidth(40);
 
         TableColumn<Monster, Void> healColumn = new TableColumn<>("Heal");
-        healColumn.setCellFactory(getButtonCellFactory("+"));
+        healColumn.setCellFactory(getButtonCellFactory("+",
+        (TableCell<Monster, Void> t) -> event -> {
+            List<Monster> monsters = new ArrayList<>();
+            monsters.add(t.getTableView().getItems().get(t.getIndex()));
+            controller.healMonsters(monsters);
+        }));
         healColumn.setStyle("-fx-alignment: CENTER;");
         healColumn.setSortable(false);
         healColumn.setEditable(false);
@@ -136,13 +243,13 @@ public class MainDialogInitialize {
         controller.tableMonsters.getColumns().add(checkBoxColumn);
 
         TableColumn<Monster, Object> conditionsColumn = new TableColumn<>("Conditions");
-        conditionsColumn.setPrefWidth(100);
+        conditionsColumn.setPrefWidth(125);
         conditionsColumn.setCellFactory(getTextCellFactory(
                 (node, monster, item) -> updateItem(node, monster, monster.getConditionAbrText(), false)));
         controller.tableMonsters.getColumns().add(conditionsColumn);
 
         TableColumn<Monster, Object> notesColumn = new TableColumn<>("Notes");
-        notesColumn.setPrefWidth(135);
+        notesColumn.setPrefWidth(200);
         notesColumn.setCellFactory(getTextCellFactory(
                 (node, monster, item) -> updateItem(node, monster, monster.getNotes(), false)));
         controller.tableMonsters.getColumns().add(notesColumn);
@@ -167,7 +274,12 @@ public class MainDialogInitialize {
     }
 
     private Callback<TableColumn<Monster, Void>, TableCell<Monster, Void>> getButtonCellFactory(
-            final String cellText) {
+            final String cellText, Function<TableCell<Monster,Void>, EventHandler<ActionEvent>> action) {
+        return getButtonCellFactory(cellText, action, m -> false );
+    }
+
+    private Callback<TableColumn<Monster, Void>, TableCell<Monster, Void>> getButtonCellFactory(
+            final String cellText, Function<TableCell<Monster,Void>, EventHandler<ActionEvent>> action, Function<Monster,Boolean> disableButton) {
         return new Callback<>() {
             @Override
             public TableCell<Monster, Void> call(final TableColumn<Monster, Void> param) {
@@ -176,15 +288,7 @@ public class MainDialogInitialize {
                     private final Button btn = new Button(cellText);
 
                     {
-                        btn.setOnAction((ActionEvent event) -> {
-                            List<Monster> monsters = new ArrayList<>();
-                            monsters.add(getTableView().getItems().get(getIndex()));
-                            if (cellText.equalsIgnoreCase("+")) {
-                                controller.healMonsters(monsters);
-                            } else {
-                                controller.damageMonsters(monsters);
-                            }
-                        });
+                        btn.setOnAction(action.apply(this));
                     }
 
                     @Override
@@ -194,6 +298,9 @@ public class MainDialogInitialize {
                             setGraphic(null);
                         } else {
                             setGraphic(btn);
+                            Monster m = getTableView().getItems().get(getIndex());
+                            if (m != null) btn.setDisable(disableButton.apply(m));
+                            else btn.setDisable(true);
                         }
                     }
                 };
