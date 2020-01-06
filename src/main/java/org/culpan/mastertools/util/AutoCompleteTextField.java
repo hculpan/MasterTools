@@ -22,34 +22,30 @@ public class AutoCompleteTextField extends TextField
     /** The popup used to select an entry. */
     private ContextMenu entriesPopup;
 
+    private boolean triggerAutocomplete = true;
+
     /** Construct a new AutoCompleteTextField. */
     public AutoCompleteTextField() {
         super();
         entries = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
         entriesPopup = new ContextMenu();
         textProperty().addListener((observableValue, s, s2) -> {
-            if (getText().length() == 0)
-            {
+            if (getText().length() == 0 || !triggerAutocomplete) {
                 entriesPopup.hide();
-            } else
-            {
+            } else {
                 LinkedList<String> searchResult = new LinkedList<>(entries.subSet(getText(), getText() + Character.MAX_VALUE));
-                if (entries.size() > 0)
-                {
+                if (entries.size() > 0) {
                     populatePopup(searchResult);
-                    if (!entriesPopup.isShowing())
-                    {
+                    if (!entriesPopup.isShowing()) {
                         entriesPopup.show(AutoCompleteTextField.this, Side.BOTTOM, 0, 0);
                     }
-                } else
-                {
+                } else {
                     entriesPopup.hide();
                 }
             }
         });
 
         focusedProperty().addListener((observableValue, aBoolean, aBoolean2) -> entriesPopup.hide());
-
     }
 
     /**
@@ -67,8 +63,7 @@ public class AutoCompleteTextField extends TextField
         // If you'd like more entries, modify this line.
         int maxEntries = 100;
         int count = Math.min(searchResult.size(), maxEntries);
-        for (int i = 0; i < count; i++)
-        {
+        for (int i = 0; i < count; i++) {
             final String result = searchResult.get(i);
             Label entryLabel = new Label(result);
             CustomMenuItem item = new CustomMenuItem(entryLabel, true);
@@ -80,6 +75,13 @@ public class AutoCompleteTextField extends TextField
         }
         entriesPopup.getItems().clear();
         entriesPopup.getItems().addAll(menuItems);
+    }
 
+    public boolean isTriggerAutocomplete() {
+        return triggerAutocomplete;
+    }
+
+    public void setTriggerAutocomplete(boolean triggerAutocomplete) {
+        this.triggerAutocomplete = triggerAutocomplete;
     }
 }

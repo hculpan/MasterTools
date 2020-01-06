@@ -1,7 +1,9 @@
 package org.culpan.mastertools.dao;
 
 import org.culpan.mastertools.model.BaseModel;
+import org.culpan.mastertools.model.Monster;
 import org.culpan.mastertools.model.PublishedMonster;
+import org.culpan.mastertools.util.JsonParser;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -99,6 +101,44 @@ public class PublishedMonsterDao extends BaseDao<PublishedMonster> {
                    if (rs.next()) return rs.getString("json");
                    return null;
                 });
+    }
+
+    public String getActionsHtml(int publishedMonsterId, String name) {
+        if (publishedMonsterId <= 0) return null;
+
+        String json = getJsonForId(publishedMonsterId);
+        JsonParser parser = new JsonParser();
+        JsonParser.JsonObject root = (JsonParser.JsonObject)parser.parse(json);
+        JsonParser.JsonArray actions = (JsonParser.JsonArray)root.getProperty("actions");
+
+        String xml = "";
+
+        if (actions.size() > 0) {
+            xml += String.format("<h3>Actions for %s</h3><hr/><br/>", name);
+            for (int i = 0; i < actions.size(); i++) {
+                JsonParser.JsonObject action = (JsonParser.JsonObject) actions.get(i);
+                xml += String.format("<em>%s</em><br/> %s <br/><br/>",
+                        action.getPropertyValue("name"),
+                        action.getPropertyValue("desc"));
+            }
+        }
+
+        actions = (JsonParser.JsonArray)root.getProperty("special_abilities");
+        if (actions.size() > 0) {
+            xml += String.format("<hr/><h3>Special Abilities for %s</h3><hr/><br/>", name);
+            for (int i = 0; i < actions.size(); i++) {
+                JsonParser.JsonObject action = (JsonParser.JsonObject) actions.get(i);
+                xml += String.format("<em>%s</em><br/> %s <br/><br/>",
+                        action.getPropertyValue("name"),
+                        action.getPropertyValue("desc"));
+            }
+        }
+
+        return xml;
+    }
+
+    public String getActionsHtml(Monster m) {
+        return getActionsHtml(m.getPublishedMonsterId(), m.getName());
     }
 
     public void deleteAll() {

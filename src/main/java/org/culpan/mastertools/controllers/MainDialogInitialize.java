@@ -95,37 +95,10 @@ public class MainDialogInitialize {
                 controller.setAttackPopupWindow(null);
             }
         });
-        String json = publishedMonsterDao.getJsonForId(m.getPublishedMonsterId());
-        JsonParser parser = new JsonParser();
-        JsonParser.JsonObject root = (JsonParser.JsonObject)parser.parse(json);
-        JsonParser.JsonArray actions = (JsonParser.JsonArray)root.getProperty("actions");
-
-        String xml = "";
-
-        if (actions.size() > 0) {
-            xml += String.format("<h3>Actions for %s</h3><hr/><br/>", m.getName());
-            for (int i = 0; i < actions.size(); i++) {
-                JsonParser.JsonObject action = (JsonParser.JsonObject) actions.get(i);
-                xml += String.format("<em>%s</em><br/> %s <br/><br/>",
-                        action.getPropertyValue("name"),
-                        action.getPropertyValue("desc"));
-            }
-        }
-
-        actions = (JsonParser.JsonArray)root.getProperty("special_abilities");
-        if (actions.size() > 0) {
-            xml += String.format("<hr/><h3>Special Abilities for %s</h3><hr/><br/>", m.getName());
-            for (int i = 0; i < actions.size(); i++) {
-                JsonParser.JsonObject action = (JsonParser.JsonObject) actions.get(i);
-                xml += String.format("<em>%s</em><br/> %s <br/><br/>",
-                        action.getPropertyValue("name"),
-                        action.getPropertyValue("desc"));
-            }
-        }
         WebView webView = new WebView();
         webView.setPrefSize(400, 400);
         pane.getChildren().add(webView);
-        webView.getEngine().loadContent(xml);
+        webView.getEngine().loadContent(publishedMonsterDao.getActionsHtml(m));
         controller.getAttackPopupWindow().show();
     }
 
@@ -219,24 +192,7 @@ public class MainDialogInitialize {
                 Monster::isActive,
                 (new_val, m) -> {
                     m.setActive(new_val);
-                    if (new_val) {
-                        m.setSummoned(false);
-                    }
-                    monsterDao.addOrUpdate(m);
-                    controller.refreshScreen();
-                }));
-        controller.tableMonsters.getColumns().add(checkBoxColumn);
-
-        checkBoxColumn = new TableColumn<>("Summ.");
-        checkBoxColumn.setPrefWidth(50);
-        checkBoxColumn.setStyle("-fx-alignment: CENTER;");
-        checkBoxColumn.setCellValueFactory(getCheckboxCellFactory(
-                Monster::isSummoned,
-                (new_val, m) -> {
-                    m.setSummoned(new_val);
-                    if (new_val) {
-                        m.setActive(false);
-                    }
+                    m.setSummoned(!new_val);
                     monsterDao.addOrUpdate(m);
                     controller.refreshScreen();
                 }));

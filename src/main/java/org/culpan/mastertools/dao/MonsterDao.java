@@ -95,7 +95,7 @@ public class MonsterDao extends BaseDao<Monster> {
                     ",   xp = " + item.getXp() +
                     ",   active = " + (item.isActive() ? 1 : 0) +
                     ",   summoned = " + (item.isSummoned() ? 1 : 0) +
-                    ",   notes = '" + (item.getNotes() != null ? item.getNotes() : "") + "', " +
+                    ",   notes = '" + (item.getNotes() != null ? item.getNotes() : "") + "' " +
                     ",   published_monster_id = " + item.getPublishedMonsterId() +
                     " where id = " + item.getId(), autocommit);
         } else {

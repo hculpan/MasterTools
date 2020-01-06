@@ -93,6 +93,19 @@ public class JsonParserTest {
         assertEquals(0, parser.getErrors().size());
     }
 
+    @Test
+    public void testJsonParser4() throws Exception {
+        JsonParser parser = new JsonParser();
+        JsonParser.JsonBase jsonBase = parser.parse(
+                "{\"dmg_res\":{}}");
+
+        for (String s : parser.getErrors()) {
+            System.out.println(String.format("Error: %s", s));
+        }
+
+        assertEquals(0, parser.getErrors().size());
+    }
+
     private String readFile(String filePath) throws Exception
     {
         return new String(Files.readAllBytes(Paths.get(getClass().getResource(filePath).toURI())));

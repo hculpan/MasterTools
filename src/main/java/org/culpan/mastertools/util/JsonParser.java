@@ -40,6 +40,10 @@ public class JsonParser {
     public class JsonObject extends JsonBase {
         private final Map<String, JsonBase> properties = new HashMap<>();
 
+        private int startingLoc;
+
+        private int endingLoc;
+
         public void setProperty(String key, JsonBase value) {
             properties.put(key, value);
         }
@@ -58,6 +62,22 @@ public class JsonParser {
                 return ((JsonValue)o).getValue();
             }
             return null;
+        }
+
+        public int getStartingLoc() {
+            return startingLoc;
+        }
+
+        public void setStartingLoc(int startingLoc) {
+            this.startingLoc = startingLoc;
+        }
+
+        public int getEndingLoc() {
+            return endingLoc;
+        }
+
+        public void setEndingLoc(int endingLoc) {
+            this.endingLoc = endingLoc;
         }
     }
 
@@ -110,17 +130,24 @@ public class JsonParser {
 
     private JsonBase parseObject() {
         JsonObject result = new JsonObject();
+        result.setStartingLoc(currLocation - 1);
 
         String next = getNextToken();
-        while (next != null) {
-            parseProperty(result, next);
-            if (!swallow(",", false)) {
-                break;
+
+        if (next != null && !next.equalsIgnoreCase("}")) {
+            while (next != null) {
+                parseProperty(result, next);
+                if (!swallow(",", false)) {
+                    break;
+                }
+                next = getNextToken();
             }
-            next = getNextToken();
+        } else {
+            pushback(next);
         }
 
         swallow("}", true);
+        result.setEndingLoc(currLocation - 1);
 
         return result;
     }
@@ -166,6 +193,12 @@ public class JsonParser {
         return result;
     }
 
+    private String peek() {
+        String v = getNextToken();
+        pushback(v);
+        return v;
+    }
+
     private boolean swallow(String token, boolean logError) {
         String next = getNextToken();
         if (next == null) {
@@ -182,6 +215,14 @@ public class JsonParser {
 
     private void pushback(String token) {
         tokenPushback = token;
+    }
+
+    private char peekNextChar() {
+        if (currLocation + 1>= json.length()) {
+            return '\0';
+        } else {
+            return json.charAt(currLocation + 1);
+        }
     }
 
     private String getNextToken() {
@@ -201,6 +242,12 @@ public class JsonParser {
             } else if (c == '"' && currBuffer.isEmpty()) {
                 currLocation += 1;
                 inQuotes = true;
+            } else if (c == '\\' && peekNextChar() == '"') {
+                currBuffer += '\"';
+                currLocation += 2;
+            } else if (c == '\\' && peekNextChar() == 'n') {
+                currBuffer += '\n';
+                currLocation += 2;
             } else if (c == '"') {
                 return currBuffer;
             } else if (inQuotes) {

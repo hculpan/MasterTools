@@ -178,13 +178,13 @@ public class MainDialogController implements Initializable {
         monster.setBaseHp(Integer.parseInt(base.getPropertyValue("hit_points")));
         monster.setAc(Integer.parseInt(base.getPropertyValue("armor_class")));
         String crStr = base.getPropertyValue("challenge_rating");
-        if (crStr.startsWith("0.125")) {
+        if (crStr.startsWith("1/8") || crStr.startsWith("0.125")) {
             monster.setCr("1/8");
             monster.setXp(xpPerCr[0]);
-        } else if (crStr.startsWith("0.25")) {
+        } else if (crStr.startsWith("1/4") || crStr.startsWith("0.25")) {
                 monster.setCr("1/4");
                 monster.setXp(xpPerCr[1]);
-        } else if (crStr.startsWith("0.5")) {
+        } else if (crStr.startsWith("1/2") || crStr.startsWith("0.5")) {
             monster.setCr("1/2");
             monster.setXp(xpPerCr[2]);
         } else {
@@ -196,30 +196,22 @@ public class MainDialogController implements Initializable {
         return monster;
     }
 
-    private void persistPublishedMonsters(String [] jsons) {
+    private void persistPublishedMonsters(JsonParser.JsonArray monsters, String fullJson) {
+        if (monsters == null || monsters.size() == 0) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Loading Monsters Error");
+            alert.setHeaderText("");
+            alert.setContentText("There are no monsters to persist");
+
+            alert.showAndWait();
+            return;
+        }
+
         publishedMonsterDao.deleteAll();
 
-        JsonParser parser = new JsonParser();
-        for (int i = 0; i < jsons.length; i++) {
-            String json = jsons[i];
-
-            JsonParser.JsonObject o = (JsonParser.JsonObject) parser.parse(json);
-            if (parser.getErrors().size() > 0) {
-                String errorMsg = "";
-                for (String err : parser.getErrors()) {
-                    errorMsg += err + "\n";
-                }
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Invalid Json");
-                alert.setHeaderText("Failed to parse json");
-
-                alert.setContentText("The json for monster " + (i + 1) + " failed to parse.\n\n" + errorMsg);
-
-                alert.showAndWait();
-                publishedMonsterDao.rollback();
-                return;
-            }
-
+        for (JsonParser.JsonBase base : monsters.getAll()) {
+            JsonParser.JsonObject o = (JsonParser.JsonObject)base;
+            String json = fullJson.substring(o.getStartingLoc(), o.getEndingLoc() + 1);
             publishedMonsterDao.addOrUpdate(buildPublishedMonster(o, json), false);
         }
 
@@ -240,21 +232,21 @@ public class MainDialogController implements Initializable {
         if (file != null) {
             try {
                 String content = new String(Files.readAllBytes(Paths.get(file.getAbsolutePath())));
-                String [] monsterJsonArray = content.split("\"index\":");
-                for (int i = 1; i < monsterJsonArray.length; i++) {
-                    String json = monsterJsonArray[i];
-                    if (i < monsterJsonArray.length - 1) {
-                        int lindex = json.lastIndexOf(",");
-                        json = "  {\n    \"index\":" + json.substring(0, lindex);
-                    } else {
-                        json = "  {\n    \"index\":" + json.substring(0, json.length() - 1);
-                    }
-                    monsterJsonArray[i] = json;
-                }
+                JsonParser parser = new JsonParser();
+                JsonParser.JsonObject o = (JsonParser.JsonObject)parser.parse(content);
+                if (o != null && parser.getErrors().size() == 0) {
+                    System.out.println();
+                    persistPublishedMonsters((JsonParser.JsonArray)o.getProperty("results"), content);
+                } else {
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Loading Monsters Error");
+                    alert.setHeaderText("");
+                    alert.setContentText("Unable to load monster data");
 
-                persistPublishedMonsters(Arrays.copyOfRange(monsterJsonArray, 1, monsterJsonArray.length));
+                    alert.showAndWait();
+                }
             } catch (IOException e) {
-                e.printStackTrace();
+                AppHelper.showExceptionInfo(e, "Load Monster DB Error");
             }
         }
     }
@@ -594,7 +586,7 @@ public class MainDialogController implements Initializable {
                     getClass().getResource("/CreateMonsterDialog.fxml"),
                     "Create Monster",
                     369,
-                    335,
+                    485,
                     true);
             stage.showAndWait();
             encounter = encounterDao.getCurrentEncounter();
