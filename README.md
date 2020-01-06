@@ -4,7 +4,7 @@ This application is a tool to assist me in running
 Dungeons & Dragons 5th Edition games.
 
 ## Requirements
-* Java 11+
+* Java 13+
 * JavaFX
 * SQLite 3.28.0+
 * Gradle 6.0.1+
@@ -26,7 +26,8 @@ Building the runnable image requires running
 ./bundle.sh
 ```
 
-This will actually call Gradle to build the app, so the
-first command is not necessary when building a runnable
-image.  The resultant image will be in `build/image`, and
-will have a `start` script to launch the application.
+This will create a mac OS-compliant (at least as of Catalina)
+app bundle.  This will be created in the 'build' directory.
+
+Executables are not currently created for either Window or
+Linux, though the Java source code is not OS-specific.
