@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleExecutable</key>
+	<string>start.command</string>
+	<key>CFBundleIconFile</key>
+	<string>MasterTools.icns</string>
+	<key>CFBundleIdentifier</key>
+	<string>org.culpan.mastertools</string>
+	<key>CFBundleDisplayName</key>
+	<string>MasterTools</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>MasterTools</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.8.10</string>
+	<key>CFBundleVersion</key>
+	<string>1.8.10</string>
+	<key>CFBundleSignature</key>
+	<string>Pde1</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>Harry Culpan</string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>NSSupportsAutomaticGraphicsSwitching</key>
+	<true/>
+	<key>LSArchitecturePriority</key>
+	<array>
+		<string>x86_64</string>
+	</array>
+</dict>
+</plist>

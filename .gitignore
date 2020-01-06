@@ -2,7 +2,11 @@
 *.class
 build
 .gradle
+.project
 .idea
+MasterTools.icns
+MasterTools.iconset
+src/main/resources/icon_64x64.png
 
 .DS_Store
 

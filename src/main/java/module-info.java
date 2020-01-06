@@ -3,6 +3,7 @@ module MasterTools.main {
     requires javafx.fxml;
     requires javafx.web;
     requires java.sql;
+    requires java.desktop;
     requires sqlite.jdbc;
 
     exports org.culpan.mastertools.controllers;
