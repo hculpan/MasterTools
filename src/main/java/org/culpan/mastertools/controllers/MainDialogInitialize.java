@@ -5,7 +5,6 @@ import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
-import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
@@ -19,7 +18,6 @@ import javafx.util.Callback;
 import org.culpan.mastertools.dao.MonsterDao;
 import org.culpan.mastertools.dao.PublishedMonsterDao;
 import org.culpan.mastertools.model.Monster;
-import org.culpan.mastertools.util.JsonParser;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;

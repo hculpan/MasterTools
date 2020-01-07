@@ -130,6 +130,32 @@ public class MainDialogController implements Initializable {
         this.attackPopupWindow = attackPopupWindow;
     }
 
+    public void treasureHoard() {
+
+    }
+
+    public void generateTreasure() {
+        try {
+            Stage stage = new Stage();
+            stage.setTitle("Generate Treasure");
+            stage.setWidth(921);
+            stage.setHeight(610);
+
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(getClass().getResource("/GenerateTreasureDialog.fxml"));
+            Parent root = loader.load();
+            GenerateTreasureDialogController controller = loader.getController();
+            controller.initialize(encounter.getMonsters());
+
+            stage.initModality(Modality.APPLICATION_MODAL);
+
+            stage.setScene(new Scene(root));
+            stage.showAndWait();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void updateNotes() {
         if (tableMonsters.getSelectionModel().getSelectedItems().size() == 0) return;
 

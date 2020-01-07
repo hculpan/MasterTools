@@ -53,9 +53,12 @@
               <MenuItem mnemonicParsing="false" onAction="#closeApp" text="Close" />
             </items>
           </Menu>
-          <Menu mnemonicParsing="false" text="Edit">
+          <Menu mnemonicParsing="false" text="Tools">
             <items>
-                  <MenuItem mnemonicParsing="false" onAction="#editParty" text="Party" />
+                  <MenuItem mnemonicParsing="false" onAction="#editParty" text="Edit Party" />
+                  <SeparatorMenuItem mnemonicParsing="false" />
+                  <MenuItem mnemonicParsing="false" onAction="#generateTreasure" text="Generate Individual Treasure" />
+                  <MenuItem mnemonicParsing="false" onAction="#treasureHoard" text="Generate Treasure Hoard" />
             </items>
           </Menu>
             <Menu mnemonicParsing="false" text="Session">
