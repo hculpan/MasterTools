@@ -135,16 +135,7 @@ public class CreateMonsterDialogController implements Initializable {
                 textHp.setText(Integer.toString(monster.getBaseHp()));
                 textAc.setText(Integer.toString(monster.getAc()));
 
-                // Calculate missing non-standard stuff
-                int crIndex;
-                if (monster.getCr().startsWith("1/8")) crIndex = 0;
-                else if (monster.getCr().startsWith("1/4")) crIndex = 1;
-                else if (monster.getCr().startsWith("1/2")) crIndex = 2;
-                else crIndex = Integer.parseInt(monster.getCr()) + 2;
-
                 publishedMonsterId = monster.getId();
-
-                updateUi();
             } else {
                 Alert alert = new Alert(Alert.AlertType.WARNING);
                 alert.setTitle("Monster Not Found");
@@ -226,7 +217,25 @@ public class CreateMonsterDialogController implements Initializable {
     }
 
     public void crChanged(ActionEvent event) {
-        updateUi();
+        // Calculate missing non-standard stuff
+        int crIndex;
+        String crStr = comboCr.getValue();
+        if (crStr.startsWith("1/8")) crIndex = 0;
+        else if (crStr.startsWith("1/4")) crIndex = 1;
+        else if (crStr.startsWith("1/2")) crIndex = 2;
+        else crIndex = Integer.parseInt(crStr) + 2;
+
+        textHp.setText(calculateAverageValue(hpPerCr[crIndex]));
+        labelHp.setText(hpPerCr[crIndex]);
+        textAc.setText(Integer.toString(acPerCr[crIndex]));
+        labelAc.setText(Integer.toString(acPerCr[crIndex]));
+
+        if (publishedMonsterId > 0) {
+            WebEngine engine = webMonsterInfo.getEngine();
+            engine.loadContent(publishedDao.getActionsHtml(publishedMonsterId, textName.getText()));
+        }
+
+        textXp.setText(NumberFormat.getNumberInstance(Locale.US).format(spinnerNumber.getValue() * xpPerCr[crIndex]));
     }
 
     private String calculateAverageValue(String s) {
@@ -252,7 +261,10 @@ public class CreateMonsterDialogController implements Initializable {
         SpinnerValueFactory<Integer> valueFactory = //
                 new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 100, 1);
         spinnerNumber.setValueFactory(valueFactory);
-        spinnerNumber.valueProperty().addListener((observable, oldValue, newValue) -> updateUi());
+        spinnerNumber.valueProperty().addListener((observable, oldValue, newValue) -> {
+            int crIndex = comboCr.getSelectionModel().getSelectedIndex();
+            textXp.setText(NumberFormat.getNumberInstance(Locale.US).format(spinnerNumber.getValue() * xpPerCr[crIndex]));
+        });
 
         textName = new AutoCompleteTextField();
         textName.setPrefSize(211, 27);

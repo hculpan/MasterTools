@@ -9,5 +9,6 @@ module MasterTools.main {
     exports org.culpan.mastertools.controllers;
     opens org.culpan.mastertools.controllers to javafx.fxml;
     opens org.culpan.mastertools.model to javafx.base;
+    opens org.culpan.mastertools.util to javafx.base;
     opens org.culpan.mastertools to javafx.graphics;
 }

@@ -16,6 +16,7 @@ import org.culpan.mastertools.AppHelper;
 import org.culpan.mastertools.dao.*;
 import org.culpan.mastertools.model.*;
 import org.culpan.mastertools.util.JsonParser;
+import org.culpan.mastertools.util.TreasureGenerator;
 
 import java.io.File;
 import java.io.IOException;
@@ -131,7 +132,8 @@ public class MainDialogController implements Initializable {
     }
 
     public void treasureHoard() {
-
+        TreasureGenerator treasureGenerator = new TreasureGenerator();
+        System.out.println(String.format("Treasure: %s", treasureGenerator.generateItem("magic_A").getItem()));
     }
 
     public void generateTreasure() {
