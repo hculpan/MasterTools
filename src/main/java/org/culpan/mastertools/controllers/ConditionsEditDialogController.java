@@ -65,12 +65,10 @@ public class ConditionsEditDialogController {
     public void okClicked() {
         List<MonsterCondition> newConditions = getSelectedConditions();
 
-        if (newConditions.size() > 0) {
-            for (Monster monster : monsters) {
-                monster.getConditions().clear();
-                monster.getConditions().addAll(newConditions);
-                monsterDao.addOrUpdateConditions(monster, true);
-            }
+        for (Monster monster : monsters) {
+            monster.getConditions().clear();
+            monster.getConditions().addAll(newConditions);
+            monsterDao.addOrUpdateConditions(monster, true);
         }
 
         Stage stage = (Stage)dialogWindow.getScene().getWindow();
